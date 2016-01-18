@@ -4,8 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 
-import pl.newstech.musicplayer.MusicService.MusicBinder;
-
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -22,30 +20,29 @@ import android.view.View;
 import android.widget.ListView;
 import android.widget.MediaController.MediaPlayerControl;
 
-/*
- * This is demo code to accompany the Mobiletuts+ series:
- * Android SDK: Creating a Music Player
- *
- * Sue Smith - February 2014
+import pl.newstech.musicplayer.MusicService.MusicBinder;
+
+/**
+ * Created by Bartek on 18.01.2016.
  */
 
 public class MainActivity extends Activity implements MediaPlayerControl {
 
     //song list variables
-    private ArrayList<Song> songList;
-    private ListView songView;
+    private ArrayList<Song> songList;//list of songs
 
     //service
     private MusicService musicSrv;
     private Intent playIntent;
+
     //binding
-    private boolean musicBound=false;
+    private boolean musicBound = false;
 
     //controller
     private MusicController controller;
 
     //activity and playback pause flags
-    private boolean paused=false, playbackPaused=false;
+    private boolean paused = false, playbackPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -53,7 +50,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         setContentView(R.layout.activity_main);
 
         //retrieve list view
-        songView = (ListView)findViewById(R.id.song_list);
+        ListView songView = (ListView) findViewById(R.id.song_list);
         //instantiate list
         songList = new ArrayList<Song>();
         //get songs from device
@@ -95,7 +92,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
     @Override
     protected void onStart() {
         super.onStart();
-        if(playIntent==null){
+        if(playIntent == null){
             playIntent = new Intent(this, MusicService.class);
             bindService(playIntent, musicConnection, Context.BIND_AUTO_CREATE);
             startService(playIntent);
@@ -108,7 +105,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         musicSrv.playSong();
         if(playbackPaused){
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
     }
@@ -129,7 +126,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
                 break;
             case R.id.action_end:
                 stopService(playIntent);
-                musicSrv=null;
+                musicSrv = null;
                 System.exit(0);
                 break;
         }
@@ -189,28 +186,28 @@ public class MainActivity extends Activity implements MediaPlayerControl {
 
     @Override
     public int getCurrentPosition() {
-        if(musicSrv!=null && musicBound && musicSrv.isPng())
+        if(musicSrv != null && musicBound && musicSrv.isPng())
             return musicSrv.getPosn();
         else return 0;
     }
 
     @Override
     public int getDuration() {
-        if(musicSrv!=null && musicBound && musicSrv.isPng())
+        if(musicSrv != null && musicBound && musicSrv.isPng())
             return musicSrv.getDur();
         else return 0;
     }
 
     @Override
     public boolean isPlaying() {
-        if(musicSrv!=null && musicBound)
+        if(musicSrv != null && musicBound)
             return musicSrv.isPng();
         return false;
     }
 
     @Override
     public void pause() {
-        playbackPaused=true;
+        playbackPaused = true;
         musicSrv.pausePlayer();
     }
 
@@ -249,7 +246,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         musicSrv.playNext();
         if(playbackPaused){
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
     }
@@ -258,7 +255,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         musicSrv.playPrev();
         if(playbackPaused){
             setController();
-            playbackPaused=false;
+            playbackPaused = false;
         }
         controller.show(0);
     }
@@ -266,7 +263,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
     @Override
     protected void onPause(){
         super.onPause();
-        paused=true;
+        paused = true;
     }
 
     @Override
@@ -274,7 +271,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
         super.onResume();
         if(paused){
             setController();
-            paused=false;
+            paused = false;
         }
     }
 
@@ -287,7 +284,7 @@ public class MainActivity extends Activity implements MediaPlayerControl {
     @Override
     protected void onDestroy() {
         stopService(playIntent);
-        musicSrv=null;
+        musicSrv = null;
         super.onDestroy();
     }
 

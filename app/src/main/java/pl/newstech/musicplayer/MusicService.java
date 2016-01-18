@@ -16,11 +16,8 @@ import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
 
-/*
- * This is demo code to accompany the Mobiletuts+ series:
- * Android SDK: Creating a Music Player
- *
- * Sue Smith - February 2014
+/**
+ * Created by Bartek on 18.01.2016.
  */
 
 public class MusicService extends Service implements
@@ -36,20 +33,20 @@ public class MusicService extends Service implements
     //binder
     private final IBinder musicBind = new MusicBinder();
     //title of current song
-    private String songTitle="";
+    private String songTitle = "";
     //notification id
-    private static final int NOTIFY_ID=1;
+    private static final int NOTIFY_ID = 1;
     //shuffle flag and random
-    private boolean shuffle=false;
+    private boolean shuffle = false;
     private Random rand;
 
     public void onCreate(){
         //create the service
         super.onCreate();
         //initialize position
-        songPosn=0;
+        songPosn = 0;
         //random
-        rand=new Random();
+        rand = new Random();
         //create player
         player = new MediaPlayer();
         //initialize
@@ -69,7 +66,7 @@ public class MusicService extends Service implements
 
     //pass song list
     public void setList(ArrayList<Song> theSongs){
-        songs=theSongs;
+        songs = theSongs;
     }
 
     //binder
@@ -100,7 +97,7 @@ public class MusicService extends Service implements
         //get song
         Song playSong = songs.get(songPosn);
         //get title
-        songTitle=playSong.getTitle();
+        songTitle = playSong.getTitle();
         //get id
         long currSong = playSong.getID();
         //set uri
@@ -188,7 +185,8 @@ public class MusicService extends Service implements
     //skip to previous track
     public void playPrev(){
         songPosn--;
-        if(songPosn<0) songPosn=songs.size()-1;
+        if(songPosn < 0)
+            songPosn = songs.size() - 1;
         playSong();
     }
 
@@ -196,14 +194,14 @@ public class MusicService extends Service implements
     public void playNext(){
         if(shuffle){
             int newSong = songPosn;
-            while(newSong==songPosn){
-                newSong=rand.nextInt(songs.size());
+            while(newSong == songPosn){
+                newSong = rand.nextInt(songs.size());
             }
-            songPosn=newSong;
+            songPosn = newSong;
         }
         else{
             songPosn++;
-            if(songPosn>=songs.size()) songPosn=0;
+            if(songPosn >= songs.size()) songPosn = 0;
         }
         playSong();
     }
@@ -215,8 +213,8 @@ public class MusicService extends Service implements
 
     //toggle shuffle
     public void setShuffle(){
-        if(shuffle) shuffle=false;
-        else shuffle=true;
+        if(shuffle) shuffle = false;
+        else shuffle = true;
     }
 
 }

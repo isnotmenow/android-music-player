@@ -1,16 +1,10 @@
 package pl.newstech.musicplayer;
 
-/**
- * Created by Bartek on 20.10.2015.
- */
 import android.content.Context;
 import android.widget.MediaController;
 
-/*
- * This is demo code to accompany the Mobiletuts+ series:
- * Android SDK: Creating a Music Player
- *
- * Sue Smith - February 2014
+/**
+ * Created by Bartek on 18.01.2016.
  */
 
 public class MusicController extends MediaController {

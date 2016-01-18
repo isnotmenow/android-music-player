@@ -1,10 +1,7 @@
 package pl.newstech.musicplayer;
 
-/*
- * This is demo code to accompany the Mobiletuts+ series:
- * Android SDK: Creating a Music Player
- * 
- * Sue Smith - February 2014
+/**
+ * Created by Bartek on 18.01.2016.
  */
 
 public class Song {
@@ -14,9 +11,9 @@ public class Song {
     private String artist;
 
     public Song(long songID, String songTitle, String songArtist){
-        id=songID;
-        title=songTitle;
-        artist=songArtist;
+        id = songID;
+        title = songTitle;
+        artist = songArtist;
     }
 
     public long getID(){return id;}

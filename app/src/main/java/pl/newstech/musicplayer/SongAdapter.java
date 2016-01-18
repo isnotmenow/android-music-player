@@ -1,6 +1,5 @@
 package pl.newstech.musicplayer;
 
-
 import java.util.ArrayList;
 
 import android.content.Context;
@@ -11,14 +10,8 @@ import android.widget.BaseAdapter;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
-import pl.newstech.musicplayer.R;
-import pl.newstech.musicplayer.Song;
-
-/*
- * This is demo code to accompany the Mobiletuts+ series:
- * Android SDK: Creating a Music Player
- * 
- * Sue Smith - February 2014
+/**
+ * Created by Bartek on 18.01.2016.
  */
 
 public class SongAdapter extends BaseAdapter {
@@ -29,8 +22,8 @@ public class SongAdapter extends BaseAdapter {
 
     //constructor
     public SongAdapter(Context c, ArrayList<Song> theSongs){
-        songs=theSongs;
-        songInf=LayoutInflater.from(c);
+        songs = theSongs;
+        songInf = LayoutInflater.from(c);
     }
 
     @Override
