@@ -1,16 +1,17 @@
-<menu xmlns:android="http://schemas.android.com/apk/res/android" >
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:musicplayer="http://schemas.android.com/apk/res-auto">
 
     <item
         android:id="@+id/action_shuffle"
         android:icon="@drawable/rand"
         android:orderInCategory="1"
-        android:showAsAction="always"
-        android:title="Shuffle"/>
+        android:title="Shuffle"
+        musicplayer:showAsAction="always"/>
     <item
         android:id="@+id/action_end"
         android:icon="@drawable/end"
         android:orderInCategory="2"
-        android:showAsAction="always"
-        android:title="End"/>
+        android:title="End"
+        musicplayer:showAsAction="always"/>
 
 </menu>

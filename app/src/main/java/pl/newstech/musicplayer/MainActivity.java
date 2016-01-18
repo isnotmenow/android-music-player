@@ -14,6 +14,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
+import android.support.v7.app.ActionBarActivity;
+import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -26,7 +28,7 @@ import pl.newstech.musicplayer.MusicService.MusicBinder;
  * Created by Bartek on 18.01.2016.
  */
 
-public class MainActivity extends Activity implements MediaPlayerControl {
+public class MainActivity extends AppCompatActivity implements MediaPlayerControl {
 
     //song list variables
     private ArrayList<Song> songList;//list of songs
@@ -42,7 +44,8 @@ public class MainActivity extends Activity implements MediaPlayerControl {
     private MusicController controller;
 
     //activity and playback pause flags
-    private boolean paused = false, playbackPaused = false;
+    private boolean paused = false,
+            playbackPaused = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

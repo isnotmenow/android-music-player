@@ -33,7 +33,7 @@ public class MusicService extends Service implements
     //binder
     private final IBinder musicBind = new MusicBinder();
     //title of current song
-    private String songTitle = "";
+    private String songTitle = "title";
     //notification id
     private static final int NOTIFY_ID = 1;
     //shuffle flag and random
@@ -116,13 +116,13 @@ public class MusicService extends Service implements
 
     //set the song
     public void setSong(int songIndex){
-        songPosn=songIndex;
+        songPosn = songIndex;
     }
 
     @Override
     public void onCompletion(MediaPlayer mp) {
         //check if playback has reached the end of a track
-        if(player.getCurrentPosition()>0){
+        if(player.getCurrentPosition() > 0){
             mp.reset();
             playNext();
         }

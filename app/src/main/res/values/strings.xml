@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">MusicPlayer</string>
+    <string name="titleText">titleText</string>
+    <string name="artistText">artistText</string>
 </resources>
