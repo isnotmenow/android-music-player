@@ -2,7 +2,6 @@ package pl.newstech.musicplayer;
 
 import java.util.ArrayList;
 import java.util.Random;
-
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -15,6 +14,8 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.os.PowerManager;
 import android.util.Log;
+import android.widget.Toast;
+
 
 /**
  * Created by Bartek on 18.01.2016.
@@ -38,6 +39,7 @@ public class MusicService extends Service implements
     private static final int NOTIFY_ID = 1;
     //shuffle flag and random
     private boolean shuffle = false;
+    private boolean repeat = false;
     private Random rand;
 
     public void onCreate(){
@@ -96,6 +98,7 @@ public class MusicService extends Service implements
         player.reset();
         //get song
         Song playSong = songs.get(songPosn);
+
         //get title
         songTitle = playSong.getTitle();
         //get id
@@ -124,7 +127,7 @@ public class MusicService extends Service implements
         //check if playback has reached the end of a track
         if(player.getCurrentPosition() > 0){
             mp.reset();
-            playNext();
+            playNext(false);
         }
     }
 
@@ -151,7 +154,7 @@ public class MusicService extends Service implements
                 .setSmallIcon(R.drawable.play)
                 .setTicker(songTitle)
                 .setOngoing(true)
-                .setContentTitle("Playing")
+                .setContentTitle("Odtwarzam")
                 .setContentText(songTitle);
         Notification not = builder.build();
         startForeground(NOTIFY_ID, not);
@@ -183,23 +186,31 @@ public class MusicService extends Service implements
     }
 
     //skip to previous track
-    public void playPrev(){
-        songPosn--;
-        if(songPosn < 0)
-            songPosn = songs.size() - 1;
+    public void playPrev(boolean byUser){
+        if(repeat && !byUser) {
+
+        }
+        else {
+            songPosn--;
+            if(songPosn < 0)
+                songPosn = songs.size() - 1;
+        }
         playSong();
     }
 
     //skip to next
-    public void playNext(){
-        if(shuffle){
+    public void playNext(boolean byUser){
+        if(repeat && !byUser) {
+
+        }
+        else if(shuffle){
             int newSong = songPosn;
             while(newSong == songPosn){
                 newSong = rand.nextInt(songs.size());
             }
             songPosn = newSong;
         }
-        else{
+        else {
             songPosn++;
             if(songPosn >= songs.size()) songPosn = 0;
         }
@@ -213,8 +224,31 @@ public class MusicService extends Service implements
 
     //toggle shuffle
     public void setShuffle(){
-        if(shuffle) shuffle = false;
-        else shuffle = true;
+        if(shuffle) {
+            shuffle = false;
+
+            Toast.makeText(this, "Repeat this song on",
+                    Toast.LENGTH_SHORT).show();
+        }
+        else {
+            shuffle = true;
+            Toast.makeText(this, "Repeat this song on",
+                    Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    //toggle repeat
+    public void setRepeat() {
+        if(repeat) {
+            repeat = false;
+            Toast.makeText(this, "Repeat this song off",
+                    Toast.LENGTH_SHORT).show();
+        }
+        else {
+            repeat = true;
+            Toast.makeText(this, "Repeat this song on",
+                    Toast.LENGTH_SHORT).show();
+        }
     }
 
 }

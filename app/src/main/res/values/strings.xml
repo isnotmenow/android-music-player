@@ -2,4 +2,5 @@
     <string name="app_name">MusicPlayer</string>
     <string name="titleText">titleText</string>
     <string name="artistText">artistText</string>
+    <string name="textCover">coverText</string>
 </resources>

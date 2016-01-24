@@ -1,20 +1,27 @@
 package pl.newstech.musicplayer;
 
+import java.io.FileDescriptor;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-
+import android.content.ContentUris;
+import android.content.DialogInterface;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.app.Activity;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
-import android.support.v7.app.ActionBarActivity;
+import android.os.ParcelFileDescriptor;
+import android.provider.MediaStore;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -34,7 +41,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     private ArrayList<Song> songList;//list of songs
 
     //service
-    private MusicService musicSrv;
+    private MusicService musicService;
     private Intent playIntent;
 
     //binding
@@ -79,9 +86,9 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         public void onServiceConnected(ComponentName name, IBinder service) {
             MusicBinder binder = (MusicBinder)service;
             //get service
-            musicSrv = binder.getService();
+            musicService = binder.getService();
             //pass list
-            musicSrv.setList(songList);
+            musicService.setList(songList);
             musicBound = true;
         }
 
@@ -104,8 +111,8 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
 
     //user song select
     public void songPicked(View view){
-        musicSrv.setSong(Integer.parseInt(view.getTag().toString()));
-        musicSrv.playSong();
+        musicService.setSong(Integer.parseInt(view.getTag().toString()));
+        musicService.playSong();
         if(playbackPaused){
             setController();
             playbackPaused = false;
@@ -120,17 +127,39 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         return true;
     }
 
+    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which){
+                case DialogInterface.BUTTON_POSITIVE:
+                    //Yes button clicked
+                    finish();
+                    stopService(playIntent);
+                    musicService = null;
+                    System.exit(0);
+                    break;
+
+                case DialogInterface.BUTTON_NEGATIVE:
+                    //No button clicked
+                    break;
+            }
+        }
+    };
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         //menu item selected
         switch (item.getItemId()) {
+            case R.id.action_repeat:
+                musicService.setRepeat();
+                break;
             case R.id.action_shuffle:
-                musicSrv.setShuffle();
+                musicService.setShuffle();
                 break;
             case R.id.action_end:
-                stopService(playIntent);
-                musicSrv = null;
-                System.exit(0);
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage("Are you sure to exit?").setPositiveButton("Yes", dialogClickListener)
+                        .setNegativeButton("No", dialogClickListener).show();
                 break;
         }
         return super.onOptionsItemSelected(item);
@@ -139,11 +168,11 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     //method to retrieve song info from device
     public void getSongList(){
         //query external audio
-        ContentResolver musicResolver = getContentResolver();
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
+        ContentResolver musicResolver = getContentResolver();
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
         //iterate over results if valid
-        if(musicCursor!=null && musicCursor.moveToFirst()){
+        if(musicCursor  != null && musicCursor.moveToFirst()){
             //get columns
             int titleColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.TITLE);
@@ -151,15 +180,51 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
+            int albumIdColumn = musicCursor.getColumnIndex
+                    (MediaStore.Audio.Media.ALBUM_ID);
+
+            Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+            Uri uri = ContentUris.withAppendedId(sArtworkUri, albumIdColumn);
+
+            InputStream in = null;
+            try {
+                in = musicResolver.openInputStream(uri);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            }
+            Bitmap artwork = BitmapFactory.decodeStream(in);
             //add songs to list
             do {
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                songList.add(new Song(thisId, thisTitle, thisArtist));
+                songList.add(new Song(thisId, thisTitle, thisArtist, artwork));
             }
             while (musicCursor.moveToNext());
         }
+    }
+
+    public Bitmap getAlbumart(Long album_id)
+    {
+        Bitmap bm = null;
+        try
+        {
+            final Uri sArtworkUri = Uri
+                    .parse("content://media/external/audio/albumart");
+
+            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
+
+            ParcelFileDescriptor pfd = this.getContentResolver()
+                    .openFileDescriptor(uri, "r");
+
+            if (pfd != null)
+            {
+                FileDescriptor fd = pfd.getFileDescriptor();
+                bm = BitmapFactory.decodeFileDescriptor(fd);
+            }
+        } catch (Exception e) {
+        }
+        return bm;
     }
 
     @Override
@@ -189,39 +254,39 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
 
     @Override
     public int getCurrentPosition() {
-        if(musicSrv != null && musicBound && musicSrv.isPng())
-            return musicSrv.getPosn();
+        if(musicService != null && musicBound && musicService.isPng())
+            return musicService.getPosn();
         else return 0;
     }
 
     @Override
     public int getDuration() {
-        if(musicSrv != null && musicBound && musicSrv.isPng())
-            return musicSrv.getDur();
+        if(musicService != null && musicBound && musicService.isPng())
+            return musicService.getDur();
         else return 0;
     }
 
     @Override
     public boolean isPlaying() {
-        if(musicSrv != null && musicBound)
-            return musicSrv.isPng();
+        if(musicService != null && musicBound)
+            return musicService.isPng();
         return false;
     }
 
     @Override
     public void pause() {
         playbackPaused = true;
-        musicSrv.pausePlayer();
+        musicService.pausePlayer();
     }
 
     @Override
     public void seekTo(int pos) {
-        musicSrv.seek(pos);
+        musicService.seek(pos);
     }
 
     @Override
     public void start() {
-        musicSrv.go();
+        musicService.go();
     }
 
     //set the controller up
@@ -246,7 +311,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     }
 
     private void playNext(){
-        musicSrv.playNext();
+        musicService.playNext(true);
         if(playbackPaused){
             setController();
             playbackPaused = false;
@@ -255,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     }
 
     private void playPrev(){
-        musicSrv.playPrev();
+        musicService.playPrev(true);
         if(playbackPaused){
             setController();
             playbackPaused = false;
@@ -287,7 +352,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     @Override
     protected void onDestroy() {
         stopService(playIntent);
-        musicSrv = null;
+        musicService = null;
         super.onDestroy();
     }
 
