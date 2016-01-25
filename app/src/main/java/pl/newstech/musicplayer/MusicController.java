@@ -7,7 +7,7 @@ import android.widget.MediaController;
  * Created by Bartek on 18.01.2016.
  */
 
-public class MusicController extends MediaController {
+public class MusicController extends MediaController {//player
 
     public MusicController(Context c){
         super(c);

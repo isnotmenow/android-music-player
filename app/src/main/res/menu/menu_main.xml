@@ -2,9 +2,30 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     tools:context="pl.newstech.musicplayer.MainActivity">
+
+    <item
+        android:id="@+id/action_repeat"
+        android:icon="@drawable/repeat_song"
+        android:orderInCategory="1"
+        android:title="Repeat"
+        app:showAsAction="always"/>
+
+    <item
+        android:id="@+id/action_shuffle"
+        android:icon="@drawable/randomize_song"
+        android:orderInCategory="2"
+        android:title="Shuffle"
+        app:showAsAction="always"/>
+
     <item
         android:id="@+id/action_settings"
-        android:orderInCategory="100"
+        android:orderInCategory="1"
         android:title="@string/action_settings"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/action_exit"
+        android:orderInCategory="2"
+        android:title="@string/action_exit"
         app:showAsAction="never" />
 </menu>

@@ -1,9 +1,11 @@
 package pl.newstech.musicplayer;
 
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
@@ -22,6 +24,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.MediaController;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.FileNotFoundException;
@@ -32,7 +35,7 @@ import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity implements MediaController.MediaPlayerControl {
 
-    //song list variables
+    //song_list list variables
     private ArrayList<Song> songList;//list of songs
 
     //service
@@ -45,13 +48,13 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
     //controller
     private MusicController controller;
 
-    ListView songView;
+    private ListView songView;
 
     //activity and playback pause flags
     private boolean paused = false,
             playbackPaused = false;
-    //
-    int sortType = 0;
+
+    private int sortType = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,27 +63,20 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
-
         //retrieve list view
         songView = (ListView) findViewById(R.id.song_list);
         //instantiate list
-        songList = new ArrayList<Song>();
+        songList = new ArrayList<>();
         //get songs from device
         getSongList();
         //sort alphabetically by title
+
         Collections.sort(songList, new Comparator<Song>() {
             public int compare(Song a, Song b) {
                 return a.getTitle().compareTo(b.getTitle());
             }
         });
+
         //create and set adapter
         SongAdapter songAdapter = new SongAdapter(this, songList);
         songView.setAdapter(songAdapter);
@@ -119,18 +115,18 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
         }
     }
 
-    //user song select
+    //user song_list select
     public void songPicked(View view){
         musicService.setSong(Integer.parseInt(view.getTag().toString()));
         musicService.playSong();
-        if(playbackPaused){
+        if(playbackPaused == true){
             setController();
             playbackPaused = false;
         }
         controller.show(0);
     }
 
-    //method to retrieve song info from device
+    //method to retrieve song_list info from device
     public void getSongList(){
         //query external audio
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
@@ -298,36 +294,24 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
         super.onDestroy();
     }
 
-    public void reSort() {
-        switch(sortType)
-        {
-            case 0:
-                Collections.sort(songList, new Comparator<Song>() {
-                    public int compare(Song a, Song b) {
-                        return a.getTitle().compareTo(b.getTitle());
-                    }
-                });
-                songView.invalidateViews();
-                Toast.makeText(this, "Sortowanie po tytule (A-Z)",
-                        Toast.LENGTH_SHORT).show();
-                break;
-            case 1:
-                Collections.sort(songList, new Comparator<Song>() {
-                    public int compare(Song a, Song b) {
-                        return a.getArtist().compareTo(b.getArtist());
-                    }
-                });
-                songView.invalidateViews();
-                Toast.makeText(this, "Sortowanie po autorze (A-Z)",
-                        Toast.LENGTH_SHORT).show();
-                break;
-            default:
-                sortType = 0;
-                reSort();
-                break;
+    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
+            switch (which){
+                case DialogInterface.BUTTON_POSITIVE:
+                    //Yes button clicked
+                    finish();
+                    stopService(playIntent);
+                    musicService = null;
+                    System.exit(0);
+                    break;
+
+                case DialogInterface.BUTTON_NEGATIVE:
+                    //No button clicked
+                    break;
+            }
         }
-        sortType++;
-    }
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -341,13 +325,54 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
         // Handle action bar item clicks here. The action bar will
         // automatically handle clicks on the Home/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
 
-        //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
+
+        switch (item.getItemId()) {
+            case R.id.action_repeat:
+                musicService.setRepeat();
+                break;
+            case R.id.action_shuffle:
+                musicService.setShuffle();
+                break;
+            case R.id.action_settings:
+                Intent activityCalled = new Intent(this, SettingsActivity.class);
+                final int result = 1;
+                activityCalled.putExtra("settingSort", sortType);
+                startActivityForResult(activityCalled, result);
+                break;
+            case R.id.action_exit:
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setMessage(getString(R.string.dialogQuestion)).setPositiveButton(getString(R.string.yesQuestion), dialogClickListener)
+                        .setNegativeButton(getString(R.string.noQuestion), dialogClickListener).show();
+                break;
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void reSortSongList(int sortSongListType) {
+
+        if(sortSongListType == 0) {
+            Collections.sort(songList, new Comparator<Song>() {
+                public int compare(Song a, Song b) {
+                    return a.getTitle().compareTo(b.getTitle());
+                }
+            });
+        }
+        else {
+            Collections.sort(songList, new Comparator<Song>() {
+                public int compare(Song a, Song b) {
+                    return a.getArtist().compareTo(b.getArtist());}
+            });
+        }
+        songView.invalidateViews();
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        // Get the users name from the previous Activity
+        sortType = data.getIntExtra("settingSort", 0);
+        reSortSongList(sortType);
     }
 }

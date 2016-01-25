@@ -17,7 +17,7 @@ import java.util.ArrayList;
 
 public class SongAdapter extends BaseAdapter {
 
-    //song list and layout
+    //song_list list and layout
     private ArrayList<Song> songs;
     private LayoutInflater songInf;
 
@@ -44,14 +44,14 @@ public class SongAdapter extends BaseAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        //map to song layout
+        //map to song_list layout
         LinearLayout songLayout = (LinearLayout)songInf.inflate
-                (R.layout.song, parent, false);
+                (R.layout.song_list, parent, false);
         //get title and artist views
         TextView songView = (TextView)songLayout.findViewById(R.id.song_title);
         TextView artistView = (TextView)songLayout.findViewById(R.id.song_artist);
         ImageView coverView = (ImageView)songLayout.findViewById(R.id.image_list);
-        //get song using position
+        //get song_list using position
         Song currSong = songs.get(position);
         //get title and artist strings
         songView.setText(currSong.getTitle());

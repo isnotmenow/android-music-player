@@ -9,8 +9,8 @@ import android.graphics.Bitmap;
 public class Song {
 
     private long id;
-    private String title;
-    private String artist;
+    private String title = String.valueOf(R.string.titleText);
+    private String artist = String.valueOf(R.string.artistText);
     private Bitmap cover;
 
     public Song(long songID, String songTitle, String songArtist, Bitmap coverBitmap){

@@ -28,13 +28,13 @@ public class MusicService extends Service implements
 
     //media player
     private MediaPlayer player;
-    //song list
+    //song_list list
     private ArrayList<Song> songs;
     //current position
     private int songCurrPosition;
     //binder
     private final IBinder musicBind = new MusicBinder();
-    //title of current song
+    //title of current song_list
     private String songTitle;
     //notification id
     private static final int NOTIFY_ID = 1;
@@ -67,7 +67,7 @@ public class MusicService extends Service implements
         player.setOnErrorListener(this);
     }
 
-    //pass song list
+    //pass song_list list
     public void setList(ArrayList<Song> theSongs){
         songs = theSongs;
     }
@@ -93,11 +93,11 @@ public class MusicService extends Service implements
         return false;
     }
 
-    //play_icon a song
+    //play_icon a song_list
     public void playSong(){
         //play_icon
         player.reset();
-        //get song
+        //get song_list
         Song playSong = songs.get(songCurrPosition);
 
         //get title
@@ -118,7 +118,7 @@ public class MusicService extends Service implements
         player.prepareAsync();
     }
 
-    //set the song
+    //set the song_list
     public void setSong(int songIndex){
         songCurrPosition = songIndex;
     }
@@ -152,7 +152,7 @@ public class MusicService extends Service implements
         Notification.Builder builder = new Notification.Builder(this);
 
         builder.setContentIntent(pendInt)
-                .setSmallIcon(R.drawable.play_icon)
+                .setSmallIcon(R.drawable.play_song)
                 .setTicker(songTitle)
                 .setOngoing(true)
                 .setContentTitle(getString(R.string.playText))
@@ -223,17 +223,19 @@ public class MusicService extends Service implements
         stopForeground(true);
     }
 
+
+
     //toggle shuffle
     public void setShuffle(){
         if(shuffle) {
             shuffle = false;
 
-            Toast.makeText(this, "Shuffle this song on",
+            Toast.makeText(this, R.string.randomOff,
                     Toast.LENGTH_SHORT).show();
         }
         else {
             shuffle = true;
-            Toast.makeText(this, "Shuffle this song on",
+            Toast.makeText(this, R.string.randomOn,
                     Toast.LENGTH_SHORT).show();
         }
     }
@@ -242,12 +244,12 @@ public class MusicService extends Service implements
     public void setRepeat() {
         if(repeat) {
             repeat = false;
-            Toast.makeText(this, "Repeat this song off",
+            Toast.makeText(this, R.string.repeatOff,
                     Toast.LENGTH_SHORT).show();
         }
         else {
             repeat = true;
-            Toast.makeText(this, "Repeat this song on",
+            Toast.makeText(this, R.string.repeatOn,
                     Toast.LENGTH_SHORT).show();
         }
     }
