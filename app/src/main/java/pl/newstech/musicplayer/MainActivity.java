@@ -1,41 +1,36 @@
 package pl.newstech.musicplayer;
 
-import java.io.FileDescriptor;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
+import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentUris;
-import android.content.DialogInterface;
+import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.content.ComponentName;
-import android.content.ContentResolver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.ServiceConnection;
-import android.database.Cursor;
-import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
-import android.support.v7.app.AlertDialog;
+import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
+import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.ListView;
-import android.widget.MediaController.MediaPlayerControl;
+import android.widget.MediaController;
+import android.widget.Toast;
 
-import pl.newstech.musicplayer.MusicService.MusicBinder;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 
-/**
- * Created by Bartek on 18.01.2016.
- */
-
-public class MainActivity extends AppCompatActivity implements MediaPlayerControl {
+public class MainActivity extends AppCompatActivity implements MediaController.MediaPlayerControl {
 
     //song list variables
     private ArrayList<Song> songList;//list of songs
@@ -50,30 +45,45 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     //controller
     private MusicController controller;
 
+    ListView songView;
+
     //activity and playback pause flags
     private boolean paused = false,
             playbackPaused = false;
+    //
+    int sortType = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
+        fab.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
+                        .setAction("Action", null).show();
+            }
+        });
 
         //retrieve list view
-        ListView songView = (ListView) findViewById(R.id.song_list);
+        songView = (ListView) findViewById(R.id.song_list);
         //instantiate list
         songList = new ArrayList<Song>();
         //get songs from device
         getSongList();
         //sort alphabetically by title
-        Collections.sort(songList, new Comparator<Song>(){
-            public int compare(Song a, Song b){
+        Collections.sort(songList, new Comparator<Song>() {
+            public int compare(Song a, Song b) {
                 return a.getTitle().compareTo(b.getTitle());
             }
         });
         //create and set adapter
-        SongAdapter songAdt = new SongAdapter(this, songList);
-        songView.setAdapter(songAdt);
+        SongAdapter songAdapter = new SongAdapter(this, songList);
+        songView.setAdapter(songAdapter);
 
         //setup controller
         setController();
@@ -84,7 +94,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            MusicBinder binder = (MusicBinder)service;
+            MusicService.MusicBinder binder = (MusicService.MusicBinder)service;
             //get service
             musicService = binder.getService();
             //pass list
@@ -120,51 +130,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         controller.show(0);
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.main, menu);
-        return true;
-    }
-
-    DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
-        @Override
-        public void onClick(DialogInterface dialog, int which) {
-            switch (which){
-                case DialogInterface.BUTTON_POSITIVE:
-                    //Yes button clicked
-                    finish();
-                    stopService(playIntent);
-                    musicService = null;
-                    System.exit(0);
-                    break;
-
-                case DialogInterface.BUTTON_NEGATIVE:
-                    //No button clicked
-                    break;
-            }
-        }
-    };
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        //menu item selected
-        switch (item.getItemId()) {
-            case R.id.action_repeat:
-                musicService.setRepeat();
-                break;
-            case R.id.action_shuffle:
-                musicService.setShuffle();
-                break;
-            case R.id.action_end:
-                AlertDialog.Builder builder = new AlertDialog.Builder(this);
-                builder.setMessage("Are you sure to exit?").setPositiveButton("Yes", dialogClickListener)
-                        .setNegativeButton("No", dialogClickListener).show();
-                break;
-        }
-        return super.onOptionsItemSelected(item);
-    }
-
     //method to retrieve song info from device
     public void getSongList(){
         //query external audio
@@ -180,7 +145,7 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
                     (android.provider.MediaStore.Audio.Media._ID);
             int artistColumn = musicCursor.getColumnIndex
                     (android.provider.MediaStore.Audio.Media.ARTIST);
-            int albumIdColumn = musicCursor.getColumnIndex
+            long albumIdColumn = musicCursor.getColumnIndex
                     (MediaStore.Audio.Media.ALBUM_ID);
 
             Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
@@ -202,29 +167,6 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
             }
             while (musicCursor.moveToNext());
         }
-    }
-
-    public Bitmap getAlbumart(Long album_id)
-    {
-        Bitmap bm = null;
-        try
-        {
-            final Uri sArtworkUri = Uri
-                    .parse("content://media/external/audio/albumart");
-
-            Uri uri = ContentUris.withAppendedId(sArtworkUri, album_id);
-
-            ParcelFileDescriptor pfd = this.getContentResolver()
-                    .openFileDescriptor(uri, "r");
-
-            if (pfd != null)
-            {
-                FileDescriptor fd = pfd.getFileDescriptor();
-                bm = BitmapFactory.decodeFileDescriptor(fd);
-            }
-        } catch (Exception e) {
-        }
-        return bm;
     }
 
     @Override
@@ -255,14 +197,14 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
     @Override
     public int getCurrentPosition() {
         if(musicService != null && musicBound && musicService.isPng())
-            return musicService.getPosn();
+            return musicService.getCurrPosition();
         else return 0;
     }
 
     @Override
     public int getDuration() {
         if(musicService != null && musicBound && musicService.isPng())
-            return musicService.getDur();
+            return musicService.getDuration();
         else return 0;
     }
 
@@ -356,4 +298,56 @@ public class MainActivity extends AppCompatActivity implements MediaPlayerContro
         super.onDestroy();
     }
 
+    public void reSort() {
+        switch(sortType)
+        {
+            case 0:
+                Collections.sort(songList, new Comparator<Song>() {
+                    public int compare(Song a, Song b) {
+                        return a.getTitle().compareTo(b.getTitle());
+                    }
+                });
+                songView.invalidateViews();
+                Toast.makeText(this, "Sortowanie po tytule (A-Z)",
+                        Toast.LENGTH_SHORT).show();
+                break;
+            case 1:
+                Collections.sort(songList, new Comparator<Song>() {
+                    public int compare(Song a, Song b) {
+                        return a.getArtist().compareTo(b.getArtist());
+                    }
+                });
+                songView.invalidateViews();
+                Toast.makeText(this, "Sortowanie po autorze (A-Z)",
+                        Toast.LENGTH_SHORT).show();
+                break;
+            default:
+                sortType = 0;
+                reSort();
+                break;
+        }
+        sortType++;
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        // Inflate the menu; this adds items to the action bar if it is present.
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+
+        //noinspection SimplifiableIfStatement
+        if (id == R.id.action_settings) {
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 }

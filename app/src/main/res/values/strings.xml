@@ -1,6 +1,11 @@
 <resources>
-    <string name="app_name">MusicPlayer</string>
-    <string name="titleText">titleText</string>
-    <string name="artistText">artistText</string>
-    <string name="textCover">coverText</string>
+    <string name="app_name">MPlayer</string>
+    <string name="action_settings">Settings</string>
+    <string name="titleText">tytuł</string>
+    <string name="artistText">artysta</string>
+    <string name="textCover">okładka</string>
+    <string name="dialogQuestion">Czy na pewno chcesz wyłączyć?</string>
+    <string name="yesQuestion">Tak</string>
+    <string name="noQuestion">Nie</string>
+    <string name="playText">Odtwarzam</string>
 </resources>
