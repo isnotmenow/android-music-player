@@ -1,6 +1,8 @@
 package pl.newstech.musicplayer;
 
+import android.content.ContentUris;
 import android.content.Context;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -8,6 +10,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+
+import com.bumptech.glide.Glide;
 
 import java.util.ArrayList;
 
@@ -20,11 +24,12 @@ public class SongAdapter extends BaseAdapter {
     //song_list list and layout
     private ArrayList<Song> songs;
     private LayoutInflater songInf;
-
+    private Context c;
     //constructor
     public SongAdapter(Context c, ArrayList<Song> theSongs){
         songs = theSongs;
         songInf = LayoutInflater.from(c);
+        this.c = c;
     }
 
     @Override
@@ -56,7 +61,10 @@ public class SongAdapter extends BaseAdapter {
         //get title and artist strings
         songView.setText(currSong.getTitle());
         artistView.setText(currSong.getArtist());
-        coverView.setImageBitmap(currSong.getCover());
+        Uri uri = ContentUris.withAppendedId(currSong.getsArtworkUri(), currSong.getAlbumIdColumn());
+        Glide.with(c).load(uri).placeholder(R.drawable.default_cover).error(R.drawable.default_cover)
+                .crossFade().centerCrop().into(coverView);
+        //coverView.setImageBitmap(currSong.getCover());
         //set position as tag
         songLayout.setTag(position);
         return songLayout;

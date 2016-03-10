@@ -14,6 +14,7 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -23,6 +24,7 @@ import android.view.MenuItem;
 import android.widget.ListView;
 import android.widget.MediaController;
 
+import java.io.FileDescriptor;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
@@ -31,6 +33,8 @@ import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity implements MediaController.MediaPlayerControl {
 
+
+    private static Context context;
     //song_list list variables
     private ArrayList<Song> songList;//list of songs
 
@@ -59,11 +63,14 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        MainActivity.context = getApplicationContext();
         songView = (ListView) findViewById(R.id.song_list);
 
         songList = new ArrayList<>();
         //get songs from device
-        getSongList();
+
+            getSongList();
+
 
         Collections.sort(songList, new Comparator<Song>() {
             public int compare(Song a, Song b) {
@@ -77,6 +84,10 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
 
         //setup controller
         setController();
+    }
+
+    public static Context getAppContext() {
+        return MainActivity.context;
     }
 
     //connect to the service
@@ -121,8 +132,10 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
     }
 
     //method to retrieve song_list info from device
-    public void getSongList(){
+    public void getSongList() {
         //query external audio
+
+
         Uri musicUri = android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI;
         ContentResolver musicResolver = getContentResolver();
         Cursor musicCursor = musicResolver.query(musicUri, null, null, null, null);
@@ -138,26 +151,33 @@ public class MainActivity extends AppCompatActivity implements MediaController.M
             long albumIdColumn = musicCursor.getColumnIndex
                     (MediaStore.Audio.Media.ALBUM_ID);
 
-            Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
+            /*Uri sArtworkUri = Uri.parse("content://media/external/audio/albumart");
             Uri uri = ContentUris.withAppendedId(sArtworkUri, albumIdColumn);
 
+            ContentResolver res = getContentResolver();
             InputStream in = null;
             try {
-                in = musicResolver.openInputStream(uri);
+                in = res.openInputStream(uri);
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             }
             Bitmap artwork = BitmapFactory.decodeStream(in);
+*/
+
+
             //add songs to list
             do {
+
                 long thisId = musicCursor.getLong(idColumn);
                 String thisTitle = musicCursor.getString(titleColumn);
                 String thisArtist = musicCursor.getString(artistColumn);
-                songList.add(new Song(thisId, thisTitle, thisArtist, artwork));
+                songList.add(new Song(thisId, thisTitle, thisArtist,albumIdColumn ));
             }
             while (musicCursor.moveToNext());
         }
     }
+
+
 
     @Override
     public boolean canPause() {
